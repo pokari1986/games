@@ -18,7 +18,6 @@ var ASSETS = {
     'se1': HOST + 'sound/SE/boko.mp3',
   },
 };
-https://rawgit.com/minimo/phina.js_advent_20151212/master/hiyoko_short.ss
 
 var SCREEN_WIDTH = 1200;
 var SCREEN_HEIGHT = 800;
@@ -29,75 +28,76 @@ var SCROLL_SPEED = 5;
 
 var player;
 var enemies = [];
+var ground;
 
 phina.define('MainScene', {
   superClass: 'CanvasScene',
   
   init: function(options) {
     this.superInit(options);
+    
     this.backgroundColor = 'skyblue';
-    this.ground = Ground(this).addChildTo(this);
-    this.player = Player(this).addChildTo(this);
-    this.enemy = Enemy(this).addChildTo(this);
 
+    Player().addChildTo(this);
+    Enemy().addChildTo(this);
+    Ground().addChildTo(this);
   },
   onpointstart: function(e) {
-    var hammer = Hammer(this, e.pointer.x - 50, e.pointer.y).addChildTo(this);
+    this.attack(e);
   },
   update: function(app){
-    if(app.frame % 40 == 1){
-      this.enemy = Enemy(this).addChildTo(this);
-    }
-    var copied = enemies.clone();
-    copied.each(function(i) {
-      var enemy = i;
-      if (this.player.hitTestElement(enemy)){
-        this.exit();
-      }
+    this.enemyPop(app);
+    this.gameOver();
+  },
+  attack: function(e){
+    Hammer(this, e.pointer.x - 50, e.pointer.y).addChildTo(this);
+  },
+  enemyPop: function(app){
+    if(app.frame % 40 == 1) Enemy().addChildTo(this);
+  },
+  gameOver: function(){
+    enemies.each(function(enemy) {
+      if (player.hitTestElement(enemy)) this.exit();
     },this);
   },
 });
 
 phina.define("Player", {
-  // Spriteクラスを継承
   superClass: 'Sprite',
-  // コンストラクタ
-  init: function(screen) {
-    // 親クラス初期化
-    this.superInit('hiyoko');
+  init: function() {
+    this.superInit('hiyoko', PLAYER_WIDTH, PLAYER_HEIGHT);
     
     this.origin.set(0,0);
-        
-    this.width = PLAYER_WIDTH;
-    this.height = PLAYER_HEIGHT;
     this.scaleX *= -1;
-    this.setPosition(screen.gridX.span(4), SCREEN_HEIGHT - GROUND_HEIGHT - PLAYER_HEIGHT+10);
+    this.setPosition(300, SCREEN_HEIGHT - GROUND_HEIGHT - PLAYER_HEIGHT+10);
     this.physical.gravity.set(0, 0.98);
+    
     var ss = FrameAnimation('hiyoko_ss');
     ss.fit = false;
     ss.attachTo(this);
     ss.gotoAndPlay('start');
+    
     player = this;
-  },
+  }
 });
 
 phina.define("Enemy", {
   // Spriteクラスを継承
   superClass: 'Sprite',
   // コンストラクタ
-  init: function(screen) {
+  init: function() {
     // 親クラス初期化
-    this.superInit('bba');
+    this.superInit('bba', PLAYER_WIDTH, PLAYER_HEIGHT);
     
     this.origin.set(0,0);
-    this.width = PLAYER_WIDTH;
-    this.height = PLAYER_HEIGHT;
     this.setPosition(SCREEN_WIDTH, SCREEN_HEIGHT - GROUND_HEIGHT - PLAYER_HEIGHT + 10);
     this.physical.gravity.set(0, 0.98);
+    
     var ss = FrameAnimation('bba_ss');
     ss.fit = false;
     ss.attachTo(this);
     ss.gotoAndPlay('start');
+    
     enemies.push(this);
   },
   update: function(){
@@ -109,24 +109,25 @@ phina.define("Ground", {
   // Spriteクラスを継承
   superClass: 'RectangleShape',
   // コンストラクタ
-  init: function(screen) {
+  init: function() {
     // 親クラス初期化
-    this.superInit();
+    this.superInit({
+      width: SCREEN_WIDTH,
+      height: GROUND_HEIGHT,
+      fill: "brown",
+    });
     
     this.origin.set(0,0);
-    this.width = SCREEN_WIDTH;
-    this.height = GROUND_HEIGHT;
-    this.fill = "brown"
     this.setPosition(0, SCREEN_HEIGHT - GROUND_HEIGHT);
+    
+    ground = this;
   },
   update: function(){
     if (this.hitTestElement(player)){
       player.physical.gravity.set(0, 0);
       player.bottom = this.top + 10;
     }
-    var copied = enemies.clone();
-    copied.each(function(i) {
-      var enemy = i;
+    enemies.each(function(enemy) {
       if (this.hitTestElement(enemy)){
         enemy.physical.gravity.set(0, 0);
         enemy.bottom = this.top + 10;
@@ -138,7 +139,10 @@ phina.define("Ground", {
 phina.define("Hammer", {
   superClass: 'CanvasElement',
   init: function(screen, x, y) {
-    this.superInit({x:x,y:y});
+    this.superInit({
+      x:x,
+      y:y
+    });
 
     var handle = RectangleShape({
       width:30,
@@ -158,7 +162,6 @@ phina.define("Hammer", {
     
     var hit_area = HitArea(x + 80, y).addChildTo(screen);
 
-    // 追加したハンマーにアニメーションをつける
     this.tweener.rotateBy(90, 100).call(function(){
       SoundManager.play('se1');
       }).to({alpha:0}, 400, 'easing').call(function(){
@@ -170,14 +173,14 @@ phina.define("Hammer", {
 phina.define("HitArea", {
   superClass: 'RectangleShape',
   init: function(x, y) {
-    this.superInit();
+    this.superInit({
+      width: 80,
+      height: 150,
+      fill: "transparent",
+      stroke: "transparent",
+    });
     
     this.origin.set(0,0);
-    this.width = 80;
-    this.height = 150;
-    this.fill = "transparent";
-    this.stroke = "transparent";
-    this.strokeWidth = 0;
     this.setPosition(x, y);
     
     this.tweener.wait(200).call(function(){
@@ -185,15 +188,15 @@ phina.define("HitArea", {
     },this);
   },
     update: function(){
-    var copied = enemies.clone();
-    copied.each(function(i) {
-      var enemy = i;
+    enemies.each(function(enemy) {
       if (this.hitTestElement(enemy)){
         var effect = HitEffect(this.x, this.y + 50, 2).addChildTo(this.parent);
         enemy.physical.force(30, -30);
-        enemy.tweener.by({
+        enemy.tweener
+        .by({
           rotation:720,
-        },1000,'easeOutCirc').call(function(){
+        },1000,'easeOutCirc')
+        .call(function(){
           enemy.remove();
           effect.remove();
         });
@@ -207,40 +210,49 @@ phina.define("HitEffect", {
     superClass: "CanvasElement",
     init: function(X,Y,scale) {
       this.superInit({
-        x:X,
-        y:Y,
+        x: X,
+        y: Y,
         width: 550,
         height: 550,
         fill: "green",
         stroke: null,
       });
 
-      var shape = CircleShape().addChildTo(this);
-      // 位置を指定
-      shape.fill = 'rgba(0,0,0,0)';
-      shape.stroke = 'white';
-      shape.strokeWidth = 2 * scale;
-      shape.radius  = 180;
+      var shape = CircleShape({
+        fill: 'rgba(0,0,0,0)',
+        stroke: 'white',
+        strokeWidth: 2 * scale,
+        radius: 180
+      }).addChildTo(this);
+
       shape.tweener
       .clear()
-      .to({alpha:0,scaleX:scale,scaleY:scale}, 500,"easeOutCubic")
+      .to({
+        alpha:0,
+        scaleX:scale,
+        scaleY:scale
+      }, 500,"easeOutCubic")
       .to({alpha:0}, 200,"easeOutQuint")
       .call(function(){
         shape.remove();
       });
 
-      // 図形をシーンに追加
-      var star = StarShape().addChildTo(this);
-      // 位置を指定
-      star.stroke = 'red';
-      star.fill = 'yellow';
-      star.sides = 11;
-      star.sideIndent = 0.6;
-      star.strokeWidth = 11;
-      star.radius  = 90;
+      var star = StarShape({
+        stroke: 'red',
+        fiill: 'yellow',
+        sides: 11,
+        sideIndent: 0.6,
+        strokeWidth: 11,
+        radius: 90
+      }).addChildTo(this);
+
       star.tweener
       .clear()
-      .to({alpha:0,scaleX:scale,scaleY:scale}, 300)
+      .to({
+        alpha:0,
+        scaleX:scale,
+        scaleY:scale
+      }, 300)
       .call(function(){
         star.remove();
       });
