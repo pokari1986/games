@@ -8,7 +8,7 @@
     "animations" : {
         "start": {
             "frames": [3,4,5],
-            "next": "start1",
+            "next": "start",
             "frequency": 5
         }
     }
