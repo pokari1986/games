@@ -10,6 +10,6 @@
             "frames": [0,1,2,3,4],
             "next": "start",
             "frequency": 5
-        },
+        }
     }
 }
