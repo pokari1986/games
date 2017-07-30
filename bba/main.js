@@ -4,16 +4,21 @@
 
 phina.globalize();
 
+var HOST = 'https://pokari1986.github.io/games/';
 var ASSETS = {
   image: {
-    'tomapiko': 'https://rawgit.com/phi-jp/phina.js/develop/assets/images/tomapiko.png',
     'hiyoko': 'https://rawgit.com/minimo/phina.js_advent_20151212/master/hiyoco_nomal_full.png',
+    'bba': HOST + 'image/bba.png',
   },
   spritesheet: {
-    'hiyoko_ss': 'https://rawgit.com/minimo/phina.js_advent_20151212/master/hiyoko_short.ss',
-  }
+    'hiyoko_ss': HOST + 'ss/hiyoko_short.ss',
+    'bba_ss': HOST + 'ss/bba_short.ss',
+  },
+  sound: {
+    'se1': HOST + 'sound/SE/boko.mp3',
+  },
 };
-
+https://rawgit.com/minimo/phina.js_advent_20151212/master/hiyoko_short.ss
 
 var SCREEN_WIDTH = 1200;
 var SCREEN_HEIGHT = 800;
@@ -82,14 +87,17 @@ phina.define("Enemy", {
   // コンストラクタ
   init: function(screen) {
     // 親クラス初期化
-    this.superInit('tomapiko');
+    this.superInit('bba');
     
     this.origin.set(0,0);
     this.width = PLAYER_WIDTH;
     this.height = PLAYER_HEIGHT;
-    this.scaleX *= -1;
     this.setPosition(SCREEN_WIDTH, SCREEN_HEIGHT - GROUND_HEIGHT - PLAYER_HEIGHT + 10);
     this.physical.gravity.set(0, 0.98);
+    var ss = FrameAnimation('bba_ss');
+    ss.fit = false;
+    ss.attachTo(this);
+    ss.gotoAndPlay('start');
     enemies.push(this);
   },
   update: function(){
@@ -151,7 +159,9 @@ phina.define("Hammer", {
     var hit_area = HitArea(x + 80, y).addChildTo(screen);
 
     // 追加したハンマーにアニメーションをつける
-    this.tweener.rotateBy(90, 100).to({alpha:0}, 400, 'easing').call(function(){
+    this.tweener.rotateBy(90, 100).call(function(){
+      SoundManager.play('se1');
+      }).to({alpha:0}, 400, 'easing').call(function(){
         this.remove();
     },this);
   },
