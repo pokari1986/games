@@ -7,7 +7,7 @@
     },
     "animations" : {
         "start": {
-            "frames": [0,1,2,3,4],
+            "frames": [0,1,2,3],
             "next": "start",
             "frequency": 5
         }
