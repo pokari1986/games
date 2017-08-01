@@ -1,3 +1,7 @@
+/*
+ * runstant
+ */
+
 phina.globalize();
 
 var HOST = 'https://pokari1986.github.io/games/';
@@ -6,6 +10,7 @@ var ASSETS = {
     'hiyoko': 'https://rawgit.com/minimo/phina.js_advent_20151212/master/hiyoco_nomal_full.png',
     'bba': HOST + 'image/bba.png',
     'hammer': HOST + 'image/hammer.png',
+    'grass': '../image/grass.png',
   },
   spritesheet: {
     'hiyoko_ss': HOST + 'ss/hiyoko_short.ss',
@@ -120,8 +125,13 @@ phina.define("Ground", {
     });
     
     this.origin.set(0,0);
-    this.setPosition(0, SCREEN_HEIGHT - GROUND_HEIGHT);
+    this.setPosition(-10, SCREEN_HEIGHT - GROUND_HEIGHT);
     
+    (18).times(function(i){
+        var sprite = Sprite('grass').addChildTo(this);
+        sprite.x = i * 93;
+        sprite.y = 18;
+    }, this);
     ground = this;
   },
   update: function(){
@@ -163,7 +173,7 @@ phina.define("HitArea", {
   superClass: 'RectangleShape',
   init: function(x, y) {
     this.superInit({
-      width: 80,
+      width: 120,
       height: 300,
       fill: "transparent",
       stroke: "transparent",
