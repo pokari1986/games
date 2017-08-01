@@ -1,7 +1,3 @@
-/*
- * runstant
- */
-
 phina.globalize();
 
 var HOST = 'https://pokari1986.github.io/games/';
@@ -9,6 +5,7 @@ var ASSETS = {
   image: {
     'hiyoko': 'https://rawgit.com/minimo/phina.js_advent_20151212/master/hiyoco_nomal_full.png',
     'bba': HOST + 'image/bba.png',
+    'hammer': HOST + 'image/hammer.png',
   },
   spritesheet: {
     'hiyoko_ss': HOST + 'ss/hiyoko_short.ss',
@@ -19,16 +16,16 @@ var ASSETS = {
   },
 };
 
-var SCREEN_WIDTH = 1200;
-var SCREEN_HEIGHT = 800;
+var SCREEN_WIDTH = 1600;
+var SCREEN_HEIGHT = 900;
 var GROUND_HEIGHT = 100;
 var PLAYER_WIDTH = 80;
 var PLAYER_HEIGHT = 80;
 var SCROLL_SPEED = 5;
-
 var player;
 var enemies = [];
 var ground;
+var hammer;
 
 phina.define('MainScene', {
   superClass: 'CanvasScene',
@@ -41,16 +38,23 @@ phina.define('MainScene', {
     Player().addChildTo(this);
     Enemy().addChildTo(this);
     Ground().addChildTo(this);
+    hammer = Hammer().addChildTo(this);
   },
   onpointstart: function(e) {
-    this.attack(e);
+    hammer.attack();
   },
   update: function(app){
     this.enemyPop(app);
     this.gameOver();
-  },
-  attack: function(e){
-    Hammer(this, e.pointer.x - 50, e.pointer.y).addChildTo(this);
+    
+    if(app.pointers <= 0) {
+      hammer.alpha = 0;
+    }else{
+      hammer.alpha = 1;
+    }
+    app.pointers.forEach(function(p){
+      hammer.setPosition(p.x-100, p.y);
+    });
   },
   enemyPop: function(app){
     if(app.frame % 40 == 1) Enemy().addChildTo(this);
@@ -67,9 +71,8 @@ phina.define("Player", {
   init: function() {
     this.superInit('hiyoko', PLAYER_WIDTH, PLAYER_HEIGHT);
     
-    this.origin.set(0,0);
     this.scaleX *= -1;
-    this.setPosition(300, SCREEN_HEIGHT - GROUND_HEIGHT - PLAYER_HEIGHT+10);
+    this.setPosition(300, SCREEN_HEIGHT - GROUND_HEIGHT - PLAYER_HEIGHT/2);
     this.physical.gravity.set(0, 0.98);
     
     var ss = FrameAnimation('hiyoko_ss');
@@ -89,8 +92,7 @@ phina.define("Enemy", {
     // 親クラス初期化
     this.superInit('bba', PLAYER_WIDTH, PLAYER_HEIGHT);
     
-    this.origin.set(0,0);
-    this.setPosition(SCREEN_WIDTH, SCREEN_HEIGHT - GROUND_HEIGHT - PLAYER_HEIGHT + 10);
+    this.setPosition(SCREEN_WIDTH, SCREEN_HEIGHT - GROUND_HEIGHT - PLAYER_HEIGHT/2);
     this.physical.gravity.set(0, 0.98);
     
     var ss = FrameAnimation('bba_ss');
@@ -137,37 +139,24 @@ phina.define("Ground", {
 });
 
 phina.define("Hammer", {
-  superClass: 'CanvasElement',
-  init: function(screen, x, y) {
-    this.superInit({
-      x:x,
-      y:y
-    });
+  superClass: 'Sprite',
+  init: function() {
+    this.superInit('hammer');
+    this.alpha = 0;
+    this.scaleX = 0.7;
+    this.scaleY = 0.7;
+    this.origin.set(0.5, 0.8);
+  },
+  attack: function(){
+    var hit_area = HitArea(this.x + 110, this.y).addChildTo(this.parent);
 
-    var handle = RectangleShape({
-      width:30,
-      height:260,
-      fill:"brown",
-      stroke:"black",
-      strokeWidth:10,
-    }).addChildTo(this);
-    var head = RectangleShape({
-      y:-80,
-      width:150,
-      height:60,
-      fill:"silver",
-      stroke:"black",
-      strokeWidth:10,
-    }).addChildTo(this);
-    
-    var hit_area = HitArea(x + 80, y).addChildTo(screen);
-
-    this.tweener.rotateBy(90, 100).call(function(){
+    this.tweener.rotateTo(120, 100).call(function(){
+              hammer = Hammer().addChildTo(this.parent);
       SoundManager.play('se1');
-      }).to({alpha:0}, 400, 'easing').call(function(){
+      }, this).to({alpha:0}, 400, 'easing').call(function(){
         this.remove();
     },this);
-  },
+  }
 });
 
 phina.define("HitArea", {
@@ -175,21 +164,19 @@ phina.define("HitArea", {
   init: function(x, y) {
     this.superInit({
       width: 80,
-      height: 150,
+      height: 300,
       fill: "transparent",
       stroke: "transparent",
     });
-    
-    this.origin.set(0,0);
     this.setPosition(x, y);
-    
+    this.isActive = true;
     this.tweener.wait(200).call(function(){
-        this.remove();
+        this.isActive = false;
     },this);
   },
-    update: function(){
+  update: function(){
     enemies.each(function(enemy) {
-      if (this.hitTestElement(enemy)){
+      if (this.isActive && this.hitTestElement(enemy)){
         var effect = HitEffect(this.x, this.y + 50, 2).addChildTo(this.parent);
         enemy.physical.force(30, -30);
         enemy.tweener
@@ -203,6 +190,8 @@ phina.define("HitArea", {
         enemies.erase(enemy);
       }
     },this);
+    
+    if(! this.isActive) this.remove();
   }
 });
 
@@ -264,8 +253,8 @@ phina.main(function() {
     assets: ASSETS,
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT
-    
   });
-  
+  app.interactive.cursor.normal = 'none';
+  app.interactive.cursor.hover = 'none';
   app.run();
 });
