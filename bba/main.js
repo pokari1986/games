@@ -29,6 +29,7 @@ var PLAYER_HEIGHT = 80;
 var SCROLL_SPEED = 5;
 var player;
 var enemies = [];
+var enemybirds = [];
 var ground;
 var hammer;
 
@@ -42,6 +43,7 @@ phina.define('MainScene', {
 
     Player().addChildTo(this);
     Enemy().addChildTo(this);
+    EnemyBird().addChildTo(this);
     Ground().addChildTo(this);
     hammer = Hammer().addChildTo(this);
   },
@@ -62,7 +64,8 @@ phina.define('MainScene', {
     });
   },
   enemyPop: function(app){
-    if(app.frame % 40 == 1) Enemy().addChildTo(this);
+    if(app.frame % 80 == 1) Enemy().addChildTo(this);
+    if(app.frame % 80 == 3) EnemyBird().addChildTo(this);
   },
   gameOver: function(){
     enemies.each(function(enemy) {
@@ -110,6 +113,29 @@ phina.define("Enemy", {
   update: function(){
     this.x -= SCROLL_SPEED;
   }
+});
+
+phina.define("EnemyBird", {
+	  // Spriteクラスを継承
+	  superClass: 'Sprite',
+	  // コンストラクタ
+	  init: function() {
+	    // 親クラス初期化
+	    this.superInit('bba', PLAYER_WIDTH, PLAYER_HEIGHT);
+	    
+	    this.setPosition(SCREEN_WIDTH, 100);
+	    this.physical.gravity.set(0, 0.04);
+	    
+	    var ss = FrameAnimation('bba_ss');
+	    ss.fit = false;
+	    ss.attachTo(this);
+	    ss.gotoAndPlay('start');
+	    
+	    enemies.push(this);
+	  },
+	  update: function(){
+	    this.x -= SCROLL_SPEED - 1;
+	  }
 });
 
 phina.define("Ground", {
