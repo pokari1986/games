@@ -7,43 +7,56 @@ phina.globalize();
 var HOST = 'https://pokari1986.github.io/games/';
 var ASSETS = {
   image: {
-    'hiyoko': 'https://rawgit.com/minimo/phina.js_advent_20151212/master/hiyoco_nomal_full.png',
+    'cats': HOST + 'image/cats.png',
     'bba': HOST + 'image/bba.png',
     'hammer': HOST + 'image/hammer.png',
     'grass': '../image/grass.png',
   },
   spritesheet: {
-    'hiyoko_ss': HOST + 'ss/hiyoko_short.ss',
-    'bba_ss': HOST + 'ss/bba_short.ss',
+    'cats_ss': HOST + 'ss/cats.ss',
+    'bba_ss': HOST + 'ss/bba.ss',
   },
   sound: {
     'se1': HOST + 'sound/SE/boko.mp3',
   },
 };
 
+
+
 var SCREEN_WIDTH = 1600;
-var SCREEN_HEIGHT = 900;
-var GROUND_HEIGHT = 100;
-var PLAYER_WIDTH = 80;
-var PLAYER_HEIGHT = 80;
+var SCREEN_HEIGHT = 960;
+
+var mainGridX = Grid({
+	width: SCREEN_WIDTH,
+	columns: SCREEN_WIDTH / 32,
+});
+var mainGridY = Grid({
+	width: SCREEN_HEIGHT,
+	columns: SCREEN_HEIGHT / 32,
+});
+
+var GROUND_HEIGHT = 96;
+
 var SCROLL_SPEED = 5;
 var player;
-var enemies = [];
-var enemybirds = [];
 var ground;
 var hammer;
 
+var EnemyGroup = DisplayElement();
+
 phina.define('MainScene', {
-  superClass: 'CanvasScene',
+  superClass: 'DisplayScene',
   
   init: function(options) {
     this.superInit(options);
     
     this.backgroundColor = 'skyblue';
 
+    WalkEnemy().addChildTo(EnemyGroup);
+    FlyEnemy().addChildTo(EnemyGroup);
+    EnemyGroup.addChildTo(this);
+    
     Player().addChildTo(this);
-    Enemy().addChildTo(this);
-    EnemyBird().addChildTo(this);
     Ground().addChildTo(this);
     hammer = Hammer().addChildTo(this);
   },
@@ -64,78 +77,14 @@ phina.define('MainScene', {
     });
   },
   enemyPop: function(app){
-    if(app.frame % 80 == 1) Enemy().addChildTo(this);
-    if(app.frame % 80 == 3) EnemyBird().addChildTo(this);
+    if(app.frame % 80 == 1) WalkEnemy().addChildTo(EnemyGroup);
+    if(app.frame % 80 == 3) FlyEnemy().addChildTo(EnemyGroup);
   },
   gameOver: function(){
-    enemies.each(function(enemy) {
-      if (player.hitTestElement(enemy)) this.exit();
-    },this);
+	  EnemyGroup.children.each(function(enemy) {
+		  if (player.hitTestElement(enemy)) this.exit();
+	  },this);
   },
-});
-
-phina.define("Player", {
-  superClass: 'Sprite',
-  init: function() {
-    this.superInit('hiyoko', PLAYER_WIDTH, PLAYER_HEIGHT);
-    
-    this.scaleX *= -1;
-    this.setPosition(300, SCREEN_HEIGHT - GROUND_HEIGHT - PLAYER_HEIGHT/2);
-    this.physical.gravity.set(0, 0.98);
-    
-    var ss = FrameAnimation('hiyoko_ss');
-    ss.fit = false;
-    ss.attachTo(this);
-    ss.gotoAndPlay('start');
-    
-    player = this;
-  }
-});
-
-phina.define("Enemy", {
-  // Spriteクラスを継承
-  superClass: 'Sprite',
-  // コンストラクタ
-  init: function() {
-    // 親クラス初期化
-    this.superInit('bba', PLAYER_WIDTH, PLAYER_HEIGHT);
-    
-    this.setPosition(SCREEN_WIDTH, SCREEN_HEIGHT - GROUND_HEIGHT - PLAYER_HEIGHT/2);
-    this.physical.gravity.set(0, 0.98);
-    
-    var ss = FrameAnimation('bba_ss');
-    ss.fit = false;
-    ss.attachTo(this);
-    ss.gotoAndPlay('start');
-    
-    enemies.push(this);
-  },
-  update: function(){
-    this.x -= SCROLL_SPEED;
-  }
-});
-
-phina.define("EnemyBird", {
-	  // Spriteクラスを継承
-	  superClass: 'Sprite',
-	  // コンストラクタ
-	  init: function() {
-	    // 親クラス初期化
-	    this.superInit('bba', PLAYER_WIDTH, PLAYER_HEIGHT);
-	    
-	    this.setPosition(SCREEN_WIDTH, 100);
-	    this.physical.gravity.set(0, 0.04);
-	    
-	    var ss = FrameAnimation('bba_ss');
-	    ss.fit = false;
-	    ss.attachTo(this);
-	    ss.gotoAndPlay('start');
-	    
-	    enemies.push(this);
-	  },
-	  update: function(){
-	    this.x -= SCROLL_SPEED - 1;
-	  }
 });
 
 phina.define("Ground", {
@@ -165,7 +114,7 @@ phina.define("Ground", {
       player.physical.gravity.set(0, 0);
       player.bottom = this.top + 10;
     }
-    enemies.each(function(enemy) {
+    EnemyGroup.children.each(function(enemy) {
       if (this.hitTestElement(enemy)){
         enemy.physical.gravity.set(0, 0);
         enemy.bottom = this.top + 10;
@@ -187,8 +136,8 @@ phina.define("Hammer", {
     var hit_area = HitArea(this.x + 110, this.y).addChildTo(this.parent);
 
     this.tweener.rotateTo(120, 100).call(function(){
-              hammer = Hammer().addChildTo(this.parent);
-      SoundManager.play('se1');
+		hammer = Hammer().addChildTo(this.parent);
+		SoundManager.play('se1');
       }, this).to({alpha:0}, 400, 'easing').call(function(){
         this.remove();
     },this);
@@ -211,28 +160,27 @@ phina.define("HitArea", {
     },this);
   },
   update: function(){
-    enemies.each(function(enemy) {
-      if (this.isActive && this.hitTestElement(enemy)){
-        var effect = HitEffect(this.x, this.y + 50, 2).addChildTo(this.parent);
-        enemy.physical.force(30, -30);
-        enemy.tweener
-        .by({
-          rotation:720,
-        },1000,'easeOutCirc')
-        .call(function(){
-          enemy.remove();
-          effect.remove();
-        });
-        enemies.erase(enemy);
-      }
-    },this);
+	  EnemyGroup.children.each(function(enemy) {
+		  if (this.isActive && this.hitTestElement(enemy)){
+			  var effect = HitEffect(this.x, this.y + 50, 2).addChildTo(this.parent);
+			  enemy.physical.force(30, -30);
+			  enemy.tweener
+			  .by({
+				  rotation:720,
+			  },1000,'easeOutCirc')
+			  .call(function(){
+				  EnemyGroup.children.erase(enemy);
+				  effect.remove();
+			  });
+		  }
+	},this);
     
-    if(! this.isActive) this.remove();
+	if(! this.isActive) this.remove();
   }
 });
 
 phina.define("HitEffect", {
-    superClass: "CanvasElement",
+    superClass: "DisplayElement",
     init: function(X,Y,scale) {
       this.superInit({
         x: X,
