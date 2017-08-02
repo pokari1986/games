@@ -1,7 +1,7 @@
 phina.define("Enemy", {
 	superClass: 'Sprite',
 	init: function(options) {
-		this.superInit(options["type"]);
+		this.superInit(options["type"], TILE_SIZE, TILE_SIZE);
 		
 		// 配置
 		this.x = options["x"];
@@ -33,8 +33,8 @@ phina.define("WalkEnemy", {
 	init: function(main) {
 		this.superInit({
 			type: "bba",
-			x: mainGridX.span(50),
-			y: mainGridY.span(25),
+			x: MainGridX.span(TILE_COL_NUM),
+			y: MainGridY.span(25),
 		});
 	    
 		// アニメーションを指定
@@ -47,8 +47,8 @@ phina.define("FlyEnemy", {
 	init: function() {
 		this.superInit({
 			type: "bba",
-	    	x: mainGridX.span(50),
-	    	y: mainGridY.span(2),
+	    	x: MainGridX.span(50),
+	    	y: MainGridY.span(2),
 		});
 		
 		// 重力を指定

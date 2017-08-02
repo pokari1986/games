@@ -3,7 +3,7 @@
         "width": 32,
         "height": 32,
         "cols": 12,
-        "rows": 12
+        "rows": 8
     },
     "animations" : {
         "start": {

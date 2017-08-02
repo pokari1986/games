@@ -7,9 +7,9 @@ phina.globalize();
 var HOST = 'https://pokari1986.github.io/games/';
 var ASSETS = {
   image: {
-    'cats': HOST + 'image/cats.png',
-    'bba': HOST + 'image/bba.png',
-    'hammer': HOST + 'image/hammer.png',
+    'cats': '../image/cats.png',
+    'bba': '../image/bba.png',
+    'hammer': '../image/hammer.png',
     'grass': '../image/grass.png',
   },
   spritesheet: {
@@ -22,22 +22,22 @@ var ASSETS = {
 };
 
 
+var TILE_COL_NUM = 25;
+var TILE_ROW_NUM = 15;
+var TILE_SIZE = 64;
+var SCREEN_WIDTH = TILE_COL_NUM * TILE_SIZE;
+var SCREEN_HEIGHT = TILE_ROW_NUM * TILE_SIZE;
 
-var SCREEN_WIDTH = 1600;
-var SCREEN_HEIGHT = 960;
-
-var mainGridX = Grid({
+var MainGridX = Grid({
 	width: SCREEN_WIDTH,
-	columns: SCREEN_WIDTH / 32,
+	columns: TILE_COL_NUM,
 });
-var mainGridY = Grid({
+var MainGridY = Grid({
 	width: SCREEN_HEIGHT,
-	columns: SCREEN_HEIGHT / 32,
+	columns: TILE_ROW_NUM,
 });
 
-var GROUND_HEIGHT = 96;
-
-var SCROLL_SPEED = 5;
+var GROUND_HEIGHT = TILE_SIZE * 2;
 var player;
 var ground;
 var hammer;
@@ -100,12 +100,13 @@ phina.define("Ground", {
     });
     
     this.origin.set(0,0);
-    this.setPosition(-10, SCREEN_HEIGHT - GROUND_HEIGHT);
+    this.setPosition(MainGridX.span(0), MainGridY.span(TILE_ROW_NUM) - GROUND_HEIGHT);
     
-    (18).times(function(i){
-        var sprite = Sprite('grass').addChildTo(this);
-        sprite.x = i * 93;
-        sprite.y = 18;
+    (TILE_COL_NUM).times(function(i){
+        var sprite = Sprite('grass', TILE_SIZE, TILE_SIZE).addChildTo(this);
+        sprite.origin.set(0,0);
+        sprite.x = i * TILE_SIZE;
+        sprite.y = 0;
     }, this);
     ground = this;
   },
