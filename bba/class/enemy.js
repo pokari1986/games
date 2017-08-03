@@ -34,7 +34,7 @@ phina.define("WalkEnemy", {
 		this.superInit({
 			type: "bba",
 			x: MainGridX.span(TILE_COL_NUM),
-			y: MainGridY.span(25),
+			y: MainGridY.span(TILE_ROW_NUM) - GROUND_HEIGHT,
 		});
 	    
 		// アニメーションを指定
@@ -47,8 +47,8 @@ phina.define("FlyEnemy", {
 	init: function() {
 		this.superInit({
 			type: "bba",
-	    	x: MainGridX.span(50),
-	    	y: MainGridY.span(2),
+	    	x: MainGridX.span(TILE_COL_NUM),
+	    	y: MainGridY.span(3),
 		});
 		
 		// 重力を指定
