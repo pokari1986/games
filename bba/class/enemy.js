@@ -1,14 +1,20 @@
 phina.define("Enemy", {
-	superClass: 'Sprite',
+	superClass: 'RectangleShape',
 	init: function(options) {
-		this.superInit(options["type"], TILE_SIZE, TILE_SIZE);
+		this.superInit({
+	    	width: TILE_SIZE,
+	    	height: TILE_SIZE,
+	    	fill: 'transparent',
+	    	x: options["x"],
+	    	y: options["y"],
+		});
 		
-		// 配置
-		this.x = options["x"];
-		this.y = options["y"];
-		
+	    if(DEBUG_MODE) this.stroke = 'red';
+	    
 		// デフォルトの重力
 		this.physical.gravity.set(0, 0.98);
+		
+		this.enemy = Sprite(options["type"], TILE_SIZE, TILE_SIZE).addChildTo(this);
 	},
 	update: function(){
 		// デフォルトは左に向かって歩くだけ
@@ -23,14 +29,14 @@ phina.define("Enemy", {
 	set_animation: function(key, label){
 	    var ss = FrameAnimation(key);
 	    ss.fit = false;
-	    ss.attachTo(this);
+	    ss.attachTo(this.enemy);
 	    ss.gotoAndPlay(label);
 	}
 });
 
 phina.define("WalkEnemy", {
 	superClass: 'Enemy',
-	init: function(main) {
+	init: function() {
 		this.superInit({
 			type: "bba",
 			x: MainGridX.span(TILE_COL_NUM),

@@ -1,8 +1,4 @@
-/*
-
-  Tiledmapサンプル
-
-*/
+phina.globalize();
 
 var SC_W = 320;
 var SC_H = 320;
@@ -18,17 +14,20 @@ var ASSETS = {
 };
 
 phina.define('MainScene', {
-  superClass: 'phina.display.DisplayScene',
+  superClass: 'DisplayScene',
   init: function() {
-    this.superInit({width:SC_W, height: SC_H});
+    this.superInit({
+    	width:SC_W, 
+    	height: SC_H
+    });
 
-    this.mapBase = phina.display.DisplayElement()
+    this.mapBase = DisplayElement()
       .setPosition(0, 0)
       .addChildTo(this);
 
     //.tmxファイルからマップをイメージとして取得し、スプライトで表示
-    this.tmx = phina.asset.AssetManager.get("tmx", "map");
-    this.map = phina.display.Sprite(this.tmx.image)
+    this.tmx = AssetManager.get("tmx", "map");
+    this.map = Sprite(this.tmx.image)
       .setOrigin(0, 0)
       .setPosition(0, 0)
       .addChildTo(this.mapBase);
@@ -48,7 +47,7 @@ phina.define('MainScene', {
 
     //メッセージウィンドウ
     var that = this;
-    this.messageWindow = phina.display.RectangleShape({
+    this.messageWindow = RectangleShape({
       cornerRadius: 10,
       width: SC_W*0.9,
       height:SC_H*0.3,
@@ -60,7 +59,7 @@ phina.define('MainScene', {
       if (that.labelArea.text == "") this.visible = false;
       else this.visible = true;
     }
-    this.labelArea = phina.ui.LabelArea({
+    this.labelArea = LabelArea({
       text: "",
       width: SC_W*0.9-10,
       height: SC_H*0.3-10,
@@ -197,13 +196,13 @@ phina.define('MainScene', {
 });
 
 phina.define('Character', {
-  superClass: 'phina.display.DisplayElement',
+  superClass: 'DisplayElement',
   init: function(type) {
     this.superInit();
     this.setOrigin(0, 0);
 
     this.type = type;
-    this.sprite = phina.display.Sprite("player", 24, 32)
+    this.sprite = Sprite("player", 24, 32)
       .setPosition(16, 10)
       .addChildTo(this);
 
@@ -276,14 +275,14 @@ phina.define('Character', {
 });
 
 phina.define("SceneFlow", {
-  superClass: "phina.game.ManagerScene",
+  superClass: "ManagerScene",
 
   init: function() {
     this.superInit({
       startLabel: "load",
       scenes: [{
         label: "load",
-        className: "phina.game.LoadingScene",
+        className: "LoadingScene",
         arguments: {
           assets: ASSETS,
         },
@@ -297,7 +296,7 @@ phina.define("SceneFlow", {
 });
 
 phina.main(function() {
-  app = phina.game.GameApp({
+  app = GameApp({
     width: SC_W,
     height: SC_H,
     backgroundColor: "#ccc",
@@ -311,7 +310,7 @@ phina.main(function() {
 });
 
 //スプライト機能拡張
-phina.display.Sprite.prototype.setFrameTrimming = function(x, y, width, height) {
+Sprite.prototype.setFrameTrimming = function(x, y, width, height) {
   this._frameTrimX = x || 0;
   this._frameTrimY = y || 0;
   this._frameTrimWidth = width || this.image.domElement.width - this._frameTrimX;
@@ -319,7 +318,7 @@ phina.display.Sprite.prototype.setFrameTrimming = function(x, y, width, height) 
   return this;
 }
 
-phina.display.Sprite.prototype.setFrameIndex = function(index, width, height) {
+Sprite.prototype.setFrameIndex = function(index, width, height) {
   var sx = this._frameTrimX || 0;
   var sy = this._frameTrimY || 0;
   var sw = this._frameTrimWidth  || (this.image.domElement.width-sx);

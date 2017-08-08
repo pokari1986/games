@@ -3113,6 +3113,18 @@ phina.namespace(function() {
         }
         return false;
       },
+      // (0, 0)が中心の横幅w, 縦幅hの四角形がrラジアン回転している場合に
+      // (x, y)の点が四角形に衝突しているかどうか
+      hitPoint: function(x, y, rect) {
+      	var s = Math.sin(-rect.rotation);
+      	var c = Math.cos(-rect.rotation);
+      	var xx = Math.abs(x*c - y*s);
+      	var yy = Math.abs(x*s + y*c);
+      	if(xx < rect.width/2.0 && yy < rect.height/2.0) {
+      		return true;
+      	}
+      	return false;
+      }
     }
 
   });

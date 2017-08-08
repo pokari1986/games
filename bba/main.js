@@ -6,21 +6,26 @@ phina.globalize();
 
 var HOST = 'https://pokari1986.github.io/games/';
 var ASSETS = {
-  image: {
-    'cats': '../image/cats.png',
-    'bba': '../image/bba.png',
-    'hammer': '../image/hammer.png',
-    'grass': '../image/grass.png',
-  },
-  spritesheet: {
-    'cats_ss': HOST + 'ss/cats.ss',
-    'bba_ss': HOST + 'ss/bba.ss',
-  },
-  sound: {
-    'se1': HOST + 'sound/SE/boko.mp3',
-  },
+	image: {
+		'player': 'assets/chara01_a1.png',
+		'cats': '../image/cats.png',
+		'bba': '../image/bba.png',
+		'hammer': '../image/hammer.png',
+		'grass': '../image/grass.png',
+	},
+ 	spritesheet: {
+ 		'cats_ss': HOST + 'ss/cats.ss',
+ 		'bba_ss': HOST + 'ss/bba.ss',
+	},
+	sound: {
+		'se1': HOST + 'sound/SE/boko.mp3',
+	},
+	tmx: {
+		"map": "assets/map.tmx",
+	}
 };
 
+var DEBUG_MODE = true;
 
 var TILE_COL_NUM = 25;
 var TILE_ROW_NUM = 15;
@@ -49,8 +54,17 @@ phina.define('MainScene', {
   
   init: function(options) {
     this.superInit(options);
-    
-    this.backgroundColor = 'skyblue';
+    this.mapBase = DisplayElement()
+    .setPosition(0, 0)
+    .addChildTo(this);
+
+  //.tmxファイルからマップをイメージとして取得し、スプライトで表示
+  this.tmx = AssetManager.get("tmx", "map");
+  this.map = Sprite(this.tmx.image)
+    .setOrigin(0, 0)
+    .setPosition(0, 0)
+    .addChildTo(this.mapBase);
+  this.map.tweener.clear().setUpdateType('fps');
 
     WalkEnemy().addChildTo(EnemyGroup);
     FlyEnemy().addChildTo(EnemyGroup);
@@ -123,114 +137,6 @@ phina.define("Ground", {
     }, this);
   },
 });
-
-phina.define("Hammer", {
-  superClass: 'Sprite',
-  init: function() {
-    this.superInit('hammer');
-    this.alpha = 0;
-    this.scaleX = 0.7;
-    this.scaleY = 0.7;
-    this.origin.set(0.5, 0.8);
-  },
-  attack: function(){
-    var hit_area = HitArea(this.x + 110, this.y).addChildTo(this.parent);
-
-    this.tweener.rotateTo(120, 100).call(function(){
-		hammer = Hammer().addChildTo(this.parent);
-		SoundManager.play('se1');
-      }, this).to({alpha:0}, 400, 'easing').call(function(){
-        this.remove();
-    },this);
-  }
-});
-
-phina.define("HitArea", {
-  superClass: 'RectangleShape',
-  init: function(x, y) {
-    this.superInit({
-      width: 120,
-      height: 300,
-      fill: "transparent",
-      stroke: "transparent",
-    });
-    this.setPosition(x, y);
-    this.isActive = true;
-    this.tweener.wait(200).call(function(){
-        this.isActive = false;
-    },this);
-  },
-  update: function(){
-	  EnemyGroup.children.each(function(enemy) {
-		  if (this.isActive && this.hitTestElement(enemy)){
-			  var effect = HitEffect(this.x, this.y + 50, 2).addChildTo(this.parent);
-			  enemy.physical.force(30, -30);
-			  enemy.tweener
-			  .by({
-				  rotation:720,
-			  },1000,'easeOutCirc')
-			  .call(function(){
-				  EnemyGroup.children.erase(enemy);
-				  effect.remove();
-			  });
-		  }
-	},this);
-    
-	if(! this.isActive) this.remove();
-  }
-});
-
-phina.define("HitEffect", {
-    superClass: "DisplayElement",
-    init: function(X,Y,scale) {
-      this.superInit({
-        x: X,
-        y: Y,
-        width: 550,
-        height: 550,
-        fill: "green",
-        stroke: null,
-      });
-
-      var shape = CircleShape({
-        fill: 'rgba(0,0,0,0)',
-        stroke: 'white',
-        strokeWidth: 2 * scale,
-        radius: 180
-      }).addChildTo(this);
-
-      shape.tweener
-      .clear()
-      .to({
-        alpha:0,
-        scaleX:scale,
-        scaleY:scale
-      }, 500,"easeOutCubic")
-      .to({alpha:0}, 200,"easeOutQuint")
-      .call(function(){
-        shape.remove();
-      });
-
-      var star = StarShape({
-        stroke: 'red',
-        fiill: 'yellow',
-        sides: 11,
-        sideIndent: 0.6,
-        strokeWidth: 11,
-        radius: 90
-      }).addChildTo(this);
-
-      star.tweener
-      .clear()
-      .to({
-        alpha:0,
-        scaleX:scale,
-        scaleY:scale
-      }, 300)
-      .call(function(){
-        star.remove();
-      });
-}});
 
 phina.main(function() {
   var app = GameApp({
