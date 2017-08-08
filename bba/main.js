@@ -20,16 +20,16 @@ var ASSETS = {
 	sound: {
 		'se1': HOST + 'sound/SE/boko.mp3',
 	},
-	tmx: {
-		"map": "assets/map.tmx",
-	}
+//	tmx: {
+//		"map": "asset/test.tmx",
+//	}
 };
 
 var DEBUG_MODE = true;
 
-var TILE_COL_NUM = 25;
-var TILE_ROW_NUM = 15;
-var TILE_SIZE = 64;
+var TILE_COL_NUM = 35;
+var TILE_ROW_NUM = 20;
+var TILE_SIZE = 32;
 var SCREEN_WIDTH = TILE_COL_NUM * TILE_SIZE;
 var SCREEN_HEIGHT = TILE_ROW_NUM * TILE_SIZE;
 
@@ -59,12 +59,12 @@ phina.define('MainScene', {
     .addChildTo(this);
 
   //.tmxファイルからマップをイメージとして取得し、スプライトで表示
-  this.tmx = AssetManager.get("tmx", "map");
-  this.map = Sprite(this.tmx.image)
-    .setOrigin(0, 0)
-    .setPosition(0, 0)
-    .addChildTo(this.mapBase);
-  this.map.tweener.clear().setUpdateType('fps');
+//  this.tmx = AssetManager.get("tmx", "map");
+//  this.map = Sprite(this.tmx.image)
+//    .setOrigin(0, 0)
+//    .setPosition(0, 0)
+//    .addChildTo(this.mapBase);
+//  this.map.tweener.clear().setUpdateType('fps');
 
     WalkEnemy().addChildTo(EnemyGroup);
     FlyEnemy().addChildTo(EnemyGroup);
@@ -143,7 +143,8 @@ phina.main(function() {
     startLabel: 'main',
     assets: ASSETS,
     width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT
+    height: SCREEN_HEIGHT,
+    fit: false,
   });
   app.interactive.cursor.normal = 'none';
   app.interactive.cursor.hover = 'none';

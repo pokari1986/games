@@ -2,8 +2,8 @@ phina.define("Hammer", {
   superClass: 'RectangleShape',
   init: function() {
     this.superInit({
-    	width: 170,
-    	height: 270,
+    	width: TILE_SIZE*2,
+    	height: TILE_SIZE * 3,
     	fill: 'transparent',
     	stroke: 'transparent',
     	originX: 0.5,
@@ -15,7 +15,7 @@ phina.define("Hammer", {
     hammer.origin = this.origin;
   },
   attack: function(){
-    //var hit_area = HitArea(this.x + 110, this.y).addChildTo(this.parent);
+    var hit_area = HitArea(this.x + this.width, this.y, this.width, this.height).addChildTo(this.parent);
     this.tweener.rotateTo(120, 100).call(function(){
 		hammer = Hammer().addChildTo(this.parent);
 		SoundManager.play('se1');
@@ -23,25 +23,14 @@ phina.define("Hammer", {
         this.remove();
     },this);
   },
-  update: function(app){
-	  var x;
-	  var y;
-	    app.pointers.forEach(function(p){
-	        x = p.x;
-	        y = p.y;
-	      });
-	  if(Collision.hitPoint(x, y, this)) {
-		  console.log("aaa");
-	  }
-  }
 });
 
 phina.define("HitArea", {
   superClass: 'RectangleShape',
-  init: function(x, y) {
+  init: function(x, y, width, height) {
     this.superInit({
-      width: 120,
-      height: 300,
+      width: width,
+      height: height,
       x: x,
       y: y,
       fill: "transparent",
@@ -55,21 +44,25 @@ phina.define("HitArea", {
     },this);
   },
   update: function(){
-	  EnemyGroup.children.each(function(enemy) {
-		  if (this.isActive && this.hitTestElement(enemy)){
-			  var effect = HitEffect(this.x, this.y + 50, 2).addChildTo(this.parent);
-			  enemy.physical.force(30, -30);
-			  enemy.tweener
-			  .by({
-				  rotation:720,
-			  },1000,'easeOutCirc')
-			  .call(function(){
-				  EnemyGroup.children.erase(enemy);
-				  effect.remove();
-			  });
-		  }
+	EnemyGroup.children.each(function(enemy) {
+	  if (this.isActive && this.hitTestElement(enemy)){
+		  var effect = HitEffect(this.x, this.y + 50, 2).addChildTo(this.parent);
+		  enemy.physical.force(30, -30);
+		  enemy.tweener
+		  .by({
+			  rotation:720,
+		  },1000,'easeOutCirc')
+		  .call(function(){
+			  EnemyGroup.children.erase(enemy);
+			  effect.remove();
+		  });
+	  }
 	},this);
     
+	if(this.hitTestElement(player)){
+		player.physical.force(5, -20);
+		player.physical.gravity.set(0, 0.98);
+	}
 	if(! this.isActive) this.remove();
   }
 });
