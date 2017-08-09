@@ -7,14 +7,20 @@ phina.define("Enemy", {
 	    	fill: 'transparent',
 	    	x: options["x"],
 	    	y: options["y"],
+	    	originX: 0,
+	    	originY: 0
 		});
 		
-	    if(DEBUG_MODE) this.stroke = 'red';
+	    if(DEBUG_MODE) {
+	    	this.stroke = 'red';
+	    	this.padding = 0;
+	    }
 	    
 		// デフォルトの重力
 		this.physical.gravity.set(0, 0.98);
 		
 		this.enemy = Sprite(options["type"], TILE_SIZE, TILE_SIZE).addChildTo(this);
+		this.enemy.origin.set(0,0);
 	},
 	update: function(){
 		// デフォルトは左に向かって歩くだけ
@@ -40,7 +46,7 @@ phina.define("WalkEnemy", {
 		this.superInit({
 			type: "bba",
 			x: MainGridX.span(TILE_COL_NUM),
-			y: MainGridY.span(TILE_ROW_NUM) - GROUND_HEIGHT,
+			y: MainGridY.span(TILE_ROW_NUM - 3),
 		});
 	    
 		// アニメーションを指定

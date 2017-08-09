@@ -260,6 +260,7 @@ phina.define("phina.asset.TiledMap", {
                     }
                 }
             }
+
             //オブジェクトグループ
             if (this.layers[i].type == "objectgroup" && this.layers[i].visible != "0") {
                 if (layerName === undefined || layerName === this.layers[i].name) {

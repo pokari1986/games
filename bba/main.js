@@ -7,7 +7,6 @@ phina.globalize();
 var HOST = 'https://pokari1986.github.io/games/';
 var ASSETS = {
 	image: {
-		'player': 'assets/chara01_a1.png',
 		'cats': '../image/cats.png',
 		'bba': '../image/bba.png',
 		'hammer': '../image/hammer.png',
@@ -20,9 +19,9 @@ var ASSETS = {
 	sound: {
 		'se1': HOST + 'sound/SE/boko.mp3',
 	},
-//	tmx: {
-//		"map": "asset/test.tmx",
-//	}
+	tmx: {
+		"map": "asset/test.tmx",
+	}
 };
 
 var DEBUG_MODE = true;
@@ -42,9 +41,8 @@ var MainGridY = Grid({
 	columns: TILE_ROW_NUM,
 });
 
-var GROUND_HEIGHT = TILE_SIZE * 2;
+var map;
 var player;
-var ground;
 var hammer;
 
 var EnemyGroup = DisplayElement();
@@ -54,24 +52,25 @@ phina.define('MainScene', {
   
   init: function(options) {
     this.superInit(options);
+    
     this.mapBase = DisplayElement()
     .setPosition(0, 0)
     .addChildTo(this);
 
   //.tmxファイルからマップをイメージとして取得し、スプライトで表示
-//  this.tmx = AssetManager.get("tmx", "map");
-//  this.map = Sprite(this.tmx.image)
-//    .setOrigin(0, 0)
-//    .setPosition(0, 0)
-//    .addChildTo(this.mapBase);
-//  this.map.tweener.clear().setUpdateType('fps');
+	var tmx = AssetManager.get("tmx", "map");
+	Sprite(tmx.image)
+    .setOrigin(0, 0)
+    .setPosition(0, 0)
+    .addChildTo(this.mapBase);
+	
+    map = tmx.getMapData("background");
 
     WalkEnemy().addChildTo(EnemyGroup);
     FlyEnemy().addChildTo(EnemyGroup);
     EnemyGroup.addChildTo(this);
     
     Player().addChildTo(this);
-    Ground().addChildTo(this);
     hammer = Hammer().addChildTo(this);
   },
   onpointstart: function(e) {
@@ -89,6 +88,11 @@ phina.define('MainScene', {
     app.pointers.forEach(function(p){
       hammer.setPosition(p.x-100, p.y);
     });
+    
+	this.collision(player);
+	EnemyGroup.children.each(function(enemy) {
+		this.collision(enemy)
+	}, this);
   },
   enemyPop: function(app){
     if(app.frame % 80 == 1) WalkEnemy().addChildTo(EnemyGroup);
@@ -99,43 +103,31 @@ phina.define('MainScene', {
 		  if (player.hitTestElement(enemy)) this.exit();
 	  },this);
   },
-});
-
-phina.define("Ground", {
-  // Spriteクラスを継承
-  superClass: 'RectangleShape',
-  // コンストラクタ
-  init: function() {
-    // 親クラス初期化
-    this.superInit({
-      width: SCREEN_WIDTH,
-      height: GROUND_HEIGHT,
-      fill: "brown",
-    });
-    
-    this.origin.set(0,0);
-    this.setPosition(MainGridX.span(0), MainGridY.span(TILE_ROW_NUM) - GROUND_HEIGHT);
-    
-    (TILE_COL_NUM).times(function(i){
-        var sprite = Sprite('grass', TILE_SIZE, TILE_SIZE).addChildTo(this);
-        sprite.origin.set(0,0);
-        sprite.x = i * TILE_SIZE;
-        sprite.y = 0;
-    }, this);
-    ground = this;
-  },
-  update: function(){
-    if (this.hitTestElement(player)){
-      player.physical.gravity.set(0, 0);
-      player.bottom = this.top + 10;
-    }
-    EnemyGroup.children.each(function(enemy) {
-      if (this.hitTestElement(enemy)){
-        enemy.physical.gravity.set(0, 0);
-        enemy.bottom = this.top + 10;
-      }
-    }, this);
-  },
+  collision: function(obj){
+	var x = Math.floor(obj.x/TILE_SIZE);
+	var y = Math.floor(obj.y/TILE_SIZE);
+  
+	// 着地
+	if (map[(y + 1) * TILE_COL_NUM + x] !== -1) {
+		obj.physical.force(0,0);
+		obj.y = MainGridY.span(Math.floor(obj.y/TILE_SIZE));
+	}
+	// 上に天井
+	if (map[(y) * TILE_COL_NUM + x] !== -1) {
+		obj.physical.force(0,0);
+		obj.y = MainGridY.span(Math.ceil(obj.y/TILE_SIZE));
+	}
+	// 左に壁
+	if (map[y * TILE_COL_NUM + x] !== -1) {
+		obj.physical.force(0,0);
+		obj.x = MainGridX.span(Math.ceil(obj.x/TILE_SIZE));
+	}
+	// 右に壁
+	if (map[y * TILE_COL_NUM + (x + 1)] !== -1) {
+		obj.physical.force(0,0);
+		obj.x = MainGridX.span(Math.floor(obj.x/TILE_SIZE));
+	}
+  }
 });
 
 phina.main(function() {

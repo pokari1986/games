@@ -6,14 +6,20 @@ phina.define("Player", {
     	height: TILE_SIZE,
     	fill: 'transparent',
     	x: MainGridX.span(2),
-    	y: MainGridY.span(TILE_ROW_NUM) - GROUND_HEIGHT
+    	y: MainGridY.span(17),
+    	originX: 0,
+    	originY: 0
     });
     
-    if(DEBUG_MODE) this.stroke = 'red';
+    if(DEBUG_MODE) {
+    	this.stroke = 'red';
+    	this.padding = 0;
+    }
     
     this.physical.gravity.set(0, 0.98);
-    
+
     var cat = Sprite('cats', TILE_SIZE, TILE_SIZE).addChildTo(this);
+    cat.origin.set(0,0);
 
     var ss = FrameAnimation('cats_ss');
     ss.fit = false;
@@ -21,5 +27,5 @@ phina.define("Player", {
     ss.gotoAndPlay('start');
     
     player = this;
-  }
+  },
 });
