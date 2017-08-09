@@ -58,15 +58,9 @@ phina.define('MainScene', {
     .addChildTo(this);
 
   //.tmxファイルからマップをイメージとして取得し、スプライトで表示
-	var tmx = AssetManager.get("tmx", "map");
-	Sprite(tmx.image)
-    .setOrigin(0, 0)
-    .setPosition(0, 0)
-    .addChildTo(this.mapBase);
-	
-    map = tmx.getMapData("background");
+	map = Map(AssetManager.get("tmx", "map")).addChildTo(this);
 
-    WalkEnemy().addChildTo(EnemyGroup);
+	WalkEnemy().addChildTo(EnemyGroup);
     FlyEnemy().addChildTo(EnemyGroup);
     EnemyGroup.addChildTo(this);
     
@@ -77,56 +71,44 @@ phina.define('MainScene', {
     hammer.attack();
   },
   update: function(app){
-    this.enemyPop(app);
-    this.gameOver();
+	// マップとの衝突
+	this.mapCollision();
+	   
+	// ハンマー表示
+	this.displayHammer(app);
     
-    if(app.pointers <= 0) {
-      hammer.alpha = 0;
-    }else{
-      hammer.alpha = 1;
-    }
+	// ゲームオーバー
+	this.gameOver();
+	
+	// 敵出現
+	this.enemyPop(app);
+  },
+  displayHammer: function(app){
+    // ゲーム画面上にマウスカーソルがあれば、ハンマーを表示する。
+    hammer.alpha = (app.pointers <= 0) ? 0 : 1;
+
+    // マウスカーソルの位置にハンマーを移動
     app.pointers.forEach(function(p){
       hammer.setPosition(p.x-100, p.y);
     });
-    
-	this.collision(player);
-	EnemyGroup.children.each(function(enemy) {
-		this.collision(enemy)
-	}, this);
   },
   enemyPop: function(app){
     if(app.frame % 80 == 1) WalkEnemy().addChildTo(EnemyGroup);
     if(app.frame % 80 == 3) FlyEnemy().addChildTo(EnemyGroup);
   },
+  mapCollision: function(){
+	// プレイヤーとマップの衝突処理
+	  map.play("background", player);
+	
+	// 敵全てとマップの衝突処理
+	EnemyGroup.children.each(function(enemy) {
+		map.play("background", enemy);
+	}, this);
+  },
   gameOver: function(){
 	  EnemyGroup.children.each(function(enemy) {
 		  if (player.hitTestElement(enemy)) this.exit();
 	  },this);
-  },
-  collision: function(obj){
-	var x = Math.floor(obj.x/TILE_SIZE);
-	var y = Math.floor(obj.y/TILE_SIZE);
-  
-	// 着地
-	if (map[(y + 1) * TILE_COL_NUM + x] !== -1) {
-		obj.physical.force(0,0);
-		obj.y = MainGridY.span(Math.floor(obj.y/TILE_SIZE));
-	}
-	// 上に天井
-	if (map[(y) * TILE_COL_NUM + x] !== -1) {
-		obj.physical.force(0,0);
-		obj.y = MainGridY.span(Math.ceil(obj.y/TILE_SIZE));
-	}
-	// 左に壁
-	if (map[y * TILE_COL_NUM + x] !== -1) {
-		obj.physical.force(0,0);
-		obj.x = MainGridX.span(Math.ceil(obj.x/TILE_SIZE));
-	}
-	// 右に壁
-	if (map[y * TILE_COL_NUM + (x + 1)] !== -1) {
-		obj.physical.force(0,0);
-		obj.x = MainGridX.span(Math.floor(obj.x/TILE_SIZE));
-	}
   }
 });
 

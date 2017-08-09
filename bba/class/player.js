@@ -17,7 +17,7 @@ phina.define("Player", {
     }
     
     this.physical.gravity.set(0, 0.98);
-
+    this.physical.force(20,20);
     var cat = Sprite('cats', TILE_SIZE, TILE_SIZE).addChildTo(this);
     cat.origin.set(0,0);
 
